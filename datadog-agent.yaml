@@ -96,7 +96,7 @@ spec:
             protocol: TCP
         env:
           - name: DD_API_KEY
-            value: <YOUR API KEY>
+            value: 778124862e46dabd2b23f577e5ba97c3
           - name: KUBERNETES
             value: "true"
           - name: DD_PROCESS_AGENT_ENABLED

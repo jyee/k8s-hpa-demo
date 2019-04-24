@@ -1,0 +1,141 @@
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: dca
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - services
+  - events
+  - endpoints
+  - pods
+  - nodes
+  - componentstatuses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - "autoscaling"
+  resources:
+  - horizontalpodautoscalers
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  resourceNames:
+  - datadogtoken             # Kubernetes event collection state
+  - datadog-leader-election  # Leader election token
+  verbs:
+  - get
+  - update
+- apiGroups:  # To create the leader election token
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - create
+  - get
+  - update
+- nonResourceURLs:
+  - "/version"
+  - "/healthz"
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: dca
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: dca
+subjects:
+- kind: ServiceAccount
+  name: dca
+  namespace: default
+---
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: dca
+  namespace: default
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: datadog-auth-token
+type: Opaque
+data:
+  # use a base64 string: `echo -n '<ThirtyX2XcharactersXlongXtoken>' | base64`
+  token: PFRoaXJ0eVgyWGNoYXJhY3RlcnNYbG9uZ1h0b2tlbj4=
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: datadog-cluster-agent
+  labels:
+    app: datadog-cluster-agent
+spec:
+  ports:
+  - port: 5005 # Has to be the same as the one exposed in the DCA. Default is 5005.
+    protocol: TCP
+  selector:
+    app: datadog-cluster-agent
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: datadog-custom-metrics-server
+spec:
+  selector:
+    app: datadog-cluster-agent
+  ports:
+  - protocol: TCP
+    port: 443
+    targetPort: 443
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: datadog-cluster-agent
+  namespace: default
+spec:
+  template:
+    metadata:
+      labels:
+        app: datadog-cluster-agent
+      name: datadog-agent
+      annotations:
+        ad.datadoghq.com/datadog-cluster-agent.check_names: '["prometheus"]'
+        ad.datadoghq.com/datadog-cluster-agent.init_configs: '[{}]'
+        ad.datadoghq.com/datadog-cluster-agent.instances: '[{"prometheus_url": "http://%%host%%:5000/metrics","namespace": "datadog.cluster_agent","metrics": ["go_goroutines","go_memstats_*","process_*","api_requests","datadog_requests","external_metrics", "cluster_checks_*"]}]'
+    spec:
+      serviceAccountName: dca
+      containers:
+      - image: datadog/cluster-agent:latest
+        imagePullPolicy: Always
+        name: datadog-cluster-agent
+        env:
+          - name: DD_API_KEY
+            value: <YOUR_API_KEY>
+          - name: DD_APP_KEY
+            value: <YOUR_APP_KEY>
+          - name: DD_COLLECT_KUBERNETES_EVENTS
+            value: "true"
+          - name: DD_LEADER_ELECTION
+            value: "true"
+          - name: DD_CLUSTER_AGENT_AUTH_TOKEN
+            value: <THIRTY_2_CHARACTERS_LONG_TOKEN>
+          - name: DD_EXTERNAL_METRICS_PROVIDER_ENABLED
+            value: 'true'
+          - name: DD_CLUSTER_AGENT_AUTH_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: datadog-auth-token
+                key: token

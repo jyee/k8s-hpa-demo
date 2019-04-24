@@ -8,11 +8,27 @@ This is a basic demo of using the [Horizontal Pod Autoscaling (HPA)](https://kub
 
 The Datadog Agent is installed as a DaemonSet. DaemonSets are like pods, but they have the special feature that Kubernetes will run one DaemonSet per node. This means we can guarantee that for every node, there will be a Datadog Agent running.
 
+Give a brief run through of the Datadog Agent YAML, then apply it.
+
 `kubectl apply -f datadog.yaml`
 
 ### 2. Install the Datadog Cluster Agent
 
+The Datadog Cluster Agent acts as a proxy to relay information from the Kubernetes API to the Datadog Agents.
+
+In a standard Datadog Agent Daemonset, the Datadog Agent will query the Kubernetes API. While this is easy to implement and understand, at very large scales, it puts a lot of stress on the Kubernetes API. The Datadog Cluster Agent helps alleviate this by performing the Kubernetes API queries and proxying to the individual Datadog Agents.
+
+The Datadog Cluster Agent also services as a custom metrics server. This will allow us in a following step to use metrics from Datadog to control the HPA.
+
+Give a brief run through of the Datadog Cluster Agent YAML, then apply it.
+
+`kubectl apply -f datadog-cluster-agent.yaml`
+
 ### 3. Show off your demo app
+
+Now that monitoring is enabled, you should deploy your application and give an overview of it. If you need an example app, give [Dat-a-dog](https://github.com/jyee/dat-a-dog) a try. It's an extremely simple app that's fun to play with and also can kill a bit of time while metrics start flowing into Datadog.
+
+After you show off the demo app, jump over to Datadog to briefly show that your monitoring is working.
 
 ### 4. Create the Autoscaler
 
