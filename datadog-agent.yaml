@@ -111,6 +111,8 @@ spec:
             value: "true"
           - name: DD_LEADER_ELECTION
             value: "true"
+          - name: DD_DOGSTATSD_NON_LOCAL_TRAFFIC
+            value: "true"
         resources:
           requests:
             memory: "256Mi"
