@@ -118,7 +118,7 @@ spec:
     spec:
       serviceAccountName: dca
       containers:
-      - image: datadog/cluster-agent:latest
+      - image: datadog/cluster-agent:1.2.0
         imagePullPolicy: Always
         name: datadog-cluster-agent
         env:

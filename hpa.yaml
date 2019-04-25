@@ -81,7 +81,4 @@ spec:
   - type: External
     external:
       metricName: <YOUR METRIC NAME>
-      metricSelector:
-        matchLabels:
-            kube_container_name: <YOUR APP NAME>
-      targetAverageValue: 9
+      targetAverageValue: <YOUR METRIC VALUE>
