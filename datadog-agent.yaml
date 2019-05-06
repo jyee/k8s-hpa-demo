@@ -82,8 +82,7 @@ spec:
     spec:
       serviceAccount: datadog-agent
       containers:
-      - image: datadog/agent:latest
-        imagePullPolicy: Always
+      - image: datadog/agent:6.11.1
         name: datadog-agent
         ports:
           - containerPort: 8125
