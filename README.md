@@ -1,12 +1,14 @@
 # Kubernetes HPA Demo
 
-This is a basic demo of using the [Horizontal Pod Autoscaling (HPA)](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/) feature of Kubernetes.
+This is a basic demo of Kubernetes [Horizontal Pod Autoscaling (HPA)](https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/) using the Datadog Agent (to collect metrics) and Datadog Cluster Agent (as an external metrics provider).
 
 ## Demo
 
 ### Preparation
 
-You'll obviously need a demo Kubernetes environment to run this, I prefer using [Minikube](https://github.com/kubernetes/minikube). Minikube is ubiquitous, so there are tons of resources available should you encounter issues. Note that if you use Minikube, you should enable the metrics server by running `minikube addons enable metrics-server`.
+You'll need a demo Kubernetes environment to run this, I prefer using [Minikube](https://github.com/kubernetes/minikube). Minikube is ubiquitous, so there are tons of resources available should you encounter issues.
+
+Note that if you use Minikube, you may want to enable the metrics server by running `minikube addons enable metrics-server`. This is required if using in-cluster metrics, but may not be if using the DCA (TODO: verify this).
 
 You'll also need a [Datadog account](https://app.datadoghq.com).
 
@@ -14,7 +16,7 @@ You'll also need a [Datadog account](https://app.datadoghq.com).
 
 The Datadog Agent is installed as a DaemonSet. DaemonSets are like pods, but they have the special feature that Kubernetes will run one DaemonSet per node. This means we can guarantee that for every node, there will be a Datadog Agent running.
 
-Give a brief run through of the Datadog Agent YAML. Note that the RBAC is baked into this file.
+Give a brief run through of the Datadog Agent YAML. Note that the RBAC is baked into this file. (TODO: add Kube State Metrics support to this file)
 
 Copy `datadog-agent.yaml` to `my-datadog-agent.yaml` and add your API key to the new file. Then apply it.
 
@@ -24,7 +26,7 @@ Copy `datadog-agent.yaml` to `my-datadog-agent.yaml` and add your API key to the
 
 The Datadog Cluster Agent acts as a proxy to relay information from the Kubernetes API to the Datadog Agents.
 
-In a standard Datadog Agent Daemonset, the Datadog Agent will query the Kubernetes API. While this is easy to implement and understand, at very large scales, it puts a lot of stress on the Kubernetes API. The Datadog Cluster Agent helps alleviate this by performing the Kubernetes API queries and proxying to the individual Datadog Agents.
+The Datadog Agent queries the Kubernetes API. While this is the most direct way for Datadog to get metrics from Kubernetes, as the number of nodes in the Kubernetes cluster increases, it also increases the number of Datadog Agents querying the Kubernetes API. This can put a lot of stress on the Kubernetes API in large scale deployments. The Datadog Cluster Agent helps alleviate this by performing the Kubernetes API queries and proxying to the individual Datadog Agents.
 
 The Datadog Cluster Agent also serves as a custom metrics server. This will allow us in a following step to use metrics from Datadog to control the HPA.
 
