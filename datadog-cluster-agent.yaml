@@ -129,8 +129,6 @@ spec:
             value: "true"
           - name: DD_LEADER_ELECTION
             value: "true"
-          - name: DD_CLUSTER_AGENT_AUTH_TOKEN
-            value: <THIRTY_2_CHARACTERS_LONG_TOKEN>
           - name: DD_EXTERNAL_METRICS_PROVIDER_ENABLED
             value: 'true'
           - name: DD_CLUSTER_AGENT_AUTH_TOKEN
